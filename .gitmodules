@@ -1,0 +1,8 @@
+[submodule "tools/anonymization_metrics"]
+	path = tools/anonymization_metrics
+	url = https://gitlab.inria.fr/magnet/anonymization_metrics.git
+	branch = master
+[submodule "tools/cllr"]
+	path = tools/cllr
+	url = https://gitlab.eurecom.fr/nautsch/cllr.git
+	branch = master
