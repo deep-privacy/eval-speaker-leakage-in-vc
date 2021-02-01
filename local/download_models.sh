@@ -6,7 +6,6 @@ home=$PWD
 expo=exp
 check=$expo/models/asv_eval/xvect_01709_1/final.raw
 
-if [ ! -f $check ]; then
   mkdir -p $expo
   cd $expo
   if [ ! -f models.tar.gz ]; then
@@ -20,6 +19,5 @@ EOF
   echo '  Unpacking models...'
   tar -xf models.tar.gz || exit 1
   cd $home
-fi
 
 echo '  Done'

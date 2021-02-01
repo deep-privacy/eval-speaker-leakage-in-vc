@@ -74,19 +74,48 @@ if [ $stage -le 1 ]; then
              ivector-subtract-global-mean $plda_dir/mean.vec scp:- ark:- | transform-vec $plda_dir/transform.mat ark:- ark:- | ivector-normalize-length ark:- ark:- |" \
         "cat data/$trials/trials | cut -d' ' --fields=1,2 |" $expo/scores || exit 1
 
-  eer=`compute-eer <(local/prepare_for_eer.py data/$trials/trials $expo/scores) 2> /dev/null`
-  mindcf1=`sid/compute_min_dcf.py --p-target 0.01 $expo/scores data/$trials/trials 2> /dev/null`
-  mindcf2=`sid/compute_min_dcf.py --p-target 0.001 $expo/scores data/$trials/trials 2> /dev/null`
+  temp_trial=$(mktemp)
+  temp_scores=$(mktemp)
+
+  src_spk2gender=data/$trials/trials
+  cut -d\  -f 1 ${src_spk2gender} | sort | uniq | while read s; do
+    echo "Speaker: $s"
+    cat data/$trials/trials | grep "^$s" > $temp_trial
+    cat $expo/scores | grep "^$s" > $temp_scores
+    eer=`compute-eer <(local/prepare_for_eer.py $temp_trial $temp_scores) 2> /dev/null`
+    mindcf1=`sid/compute_min_dcf.py --p-target 0.01 $temp_scores $temp_trial 2> /dev/null`
+    mindcf2=`sid/compute_min_dcf.py --p-target 0.001 $temp_scores $temp_trial 2> /dev/null`
+    echo "EER: $eer%" | tee $expo/EER_$s
+    echo "minDCF(p-target=0.01): $mindcf1" | tee -a $expo/EER_$s
+    echo "minDCF(p-target=0.001): $mindcf2" | tee -a $expo/EER_$s
+    PYTHONPATH=$(realpath ./tools/cllr) python3 ./tools/cllr/compute_cllr.py \
+      -k $temp_trial -s $temp_scores -e | tee $expo/Cllr_$s || exit 1
+
+    # Compute linkability
+    PYTHONPATH=$(realpath ./tools/anonymization_metrics) python3 local/compute_linkability.py \
+      -k $temp_trial -s $temp_scores \
+      -d -o $expo/linkability | tee $expo/linkability_log_$s || exit 1
+  done
+
+  cat data/$trials/trials > $temp_trial
+  cat $expo/scores > $temp_scores
+
+  eer=`compute-eer <(local/prepare_for_eer.py $temp_trial $temp_scores) 2> /dev/null`
+  mindcf1=`sid/compute_min_dcf.py --p-target 0.01 $temp_scores $temp_trial 2> /dev/null`
+  mindcf2=`sid/compute_min_dcf.py --p-target 0.001 $temp_scores $temp_trial 2> /dev/null`
   echo "EER: $eer%" | tee $expo/EER
   echo "minDCF(p-target=0.01): $mindcf1" | tee -a $expo/EER
   echo "minDCF(p-target=0.001): $mindcf2" | tee -a $expo/EER
   PYTHONPATH=$(realpath ./tools/cllr) python3 ./tools/cllr/compute_cllr.py \
-    -k data/$trials/trials -s $expo/scores -e | tee $expo/Cllr || exit 1
+    -k $temp_trial -s $temp_scores -e | tee $expo/Cllr || exit 1
 
   # Compute linkability
   PYTHONPATH=$(realpath ./tools/anonymization_metrics) python3 local/compute_linkability.py \
-    -k data/$trials/trials -s $expo/scores \
+    -k $temp_trial -s $temp_scores \
     -d -o $expo/linkability | tee $expo/linkability_log || exit 1
+
+  rm $temp_trial
+  rm $temp_scores
 fi
 
 

@@ -9,6 +9,7 @@ pip_install=false
 dataset="dev" # dev or test
 datatype="anon" # original or anon or all
 level="utt" # utt or spk
+folder="exp/anon_xvector" # or exp/anon_xvector_white-box
 
 . utils/parse_options.sh || exit 1;
 
@@ -23,6 +24,14 @@ BASEDIR=$(dirname $0)
 
 basedir="$(realpath ".")"
 
+
+echo "==="
+ls $folder/xvect_libri_${dataset}_trials_m_anon/ | grep -E ".*[0-9]+.scp" | while read -r line ; do
+cat $folder/xvect_libri_${dataset}_trials_m_anon//$line
+done | cut -d'-' -f1 | uniq | awk '{a[$0]++}END{for(i in a){if(a[i]-1)print i,a[i]}}' | sort -n
+echo "==="
+echo "If there is line between ===, the xvectors.scp files arn't splited by speakers"
+
 python3 $BASEDIR/kaldi_plot_xvectors.py \
   $basedir \
-  $dataset  $datatype $level
+  $dataset  $datatype $level $folder

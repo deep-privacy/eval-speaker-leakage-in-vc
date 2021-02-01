@@ -6,7 +6,9 @@ from ioTools import readwrite
 from kaldiio import WriteHelper, ReadHelper
 import numpy as np
 
+
 args = sys.argv
+print(args)
 data_dir = args[1]
 xvector_file = args[2]
 out_dir = args[3]
@@ -30,6 +32,9 @@ with ReadHelper('scp:'+pitch_file) as reader:
         #kaldi_f0[unvoiced] = 0
         #readwrite.write_raw_mat(kaldi_f0, join(pitch_out_dir, key+'.f0'))
         f0 = np.zeros(kaldi_f0.shape)
+        if kaldi_f0.shape < yaapt_f0.shape:
+            print("Warning yaapt_f0 > kaldi_f0 for utt:", key)
+            yaapt_f0 = yaapt_f0[:kaldi_f0.shape[0]]
         f0[:yaapt_f0.shape[0]] = yaapt_f0
         readwrite.write_raw_mat(f0, join(pitch_out_dir, key+'.f0'))
 

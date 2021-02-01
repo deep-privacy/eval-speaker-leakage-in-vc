@@ -9,12 +9,12 @@ nj=$(nproc)
 voice_conversion_exp=""
 
 data_url_libritts=www.openslr.org/resources/60     # Link to download LibriTTS corpus
-dataset=$1
 
 . ./cmd.sh
 . ./path.sh
 
 . utils/parse_options.sh || exit 1;
+dataset=$1
 
 anoni_pool=$(realpath $voice_conversion_exp)/data/libritts_train_other_500
 corpora=$(realpath $voice_conversion_exp)/corpora
@@ -70,7 +70,7 @@ data_realpath=$(realpath ".")/data
 anon_xvec_out_dir=$(realpath $voice_conversion_exp)/feats/x_vector/
 
 if [ $stage -le 3 ]; then
-  for name in $(echo $1 | tr " " "\n"); do
+  for name in $(echo $dataset | tr " " "\n"); do
     # NJ < num_spk
     spk2utt=${data_realpath}/$name/spk2utt
     [ ! -f $spk2utt ] && echo "File $spk2utt does not exist" && exit 1
@@ -81,14 +81,14 @@ if [ $stage -le 3 ]; then
     mkdir -p $anon_xvec_out_dir
 
     cd $VC_DIR
-    # local/featex/01_extract_xvectors.sh --nj $nj ${data_realpath}/$name ${xvec_nnet_dir} \
-      # $anon_xvec_out_dir || exit 1;
+    local/featex/01_extract_xvectors.sh --nj $nj ${data_realpath}/$name ${xvec_nnet_dir} \
+      $anon_xvec_out_dir || exit 1;
     cd -
 
 
     cd $VC_DIR
     printf "${GREEN}\nStage 3.2: Pitch extraction for $name.${NC}\n"
-    # local/featex/02_extract_pitch.sh --nj ${nj} ${data_realpath}/$name || exit 1;
+    local/featex/02_extract_pitch.sh --nj ${nj} ${data_realpath}/$name || exit 1;
     cd -
 
     cd $VC_DIR
