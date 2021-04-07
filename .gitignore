@@ -4,3 +4,7 @@ results/
 sid/
 sox_bin/
 data/
+sid
+steps
+utils
+vc_toolkit_helper/voice_privacy/path
