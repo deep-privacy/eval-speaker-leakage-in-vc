@@ -9,6 +9,7 @@ nj=$(nproc)
 asv_eval_model=exp/models/asv_eval/xvect_01709_1
 plda_dir=$asv_eval_model/xvect_train_clean_360
 x_vector_ouput=$asv_eval_model
+inverse_vad="false"
 
 enrolls=libri_dev_enrolls
 trials=libri_dev_trials_f
@@ -37,7 +38,7 @@ if [ $stage -le 0 ]; then
         --write-utt2num-frames true $data || exit 1
       utils/fix_data_dir.sh $data || exit 1
       printf "${RED}  compute VAD: $dset${NC}\n"
-      sid/compute_vad_decision.sh --nj $njobs --cmd "$train_cmd" $data || exit 1
+      sid/compute_vad_decision.sh --inverse $inverse_vad --nj $njobs --cmd "$train_cmd" $data || exit 1
       utils/fix_data_dir.sh $data || exit 1
   done
 
@@ -64,7 +65,7 @@ if [ $stage -le 1 ]; then
   for name in $xvect_enrolls $xvect_trials; do
     [ ! -f $name ] && echo "File $name does not exist" && exit 1
   done
-  $train_cmd $expo/log/ivector-plda-scoring.log \
+  $train_cmd $expo/log/ivector-plda-scoring-$trials-$enrolls.log \
     sed -r 's/_|-/ /g' data/$enrolls/enrolls \| awk '{split($1, val, "_"); ++num[val[1]]}END{for (spk in num) print spk, num[spk]}' \| \
       ivector-plda-scoring --normalize-length=true --num-utts=ark:- \
         "ivector-copy-plda --smoothing=0.0 $plda_dir/plda - |" \
@@ -93,7 +94,7 @@ if [ $stage -le 1 ]; then
 
     # Compute linkability
     PYTHONPATH=$(realpath ./tools/anonymization_metrics) python3 local/compute_linkability.py \
-      -k $temp_trial -s $temp_scores \
+      -k $temp_trial -s $temp_scores --bins 50 \
       -d -o $expo/linkability | tee $expo/linkability_log_$s || exit 1
   done
 
@@ -130,5 +131,60 @@ if [ $stage -le 2 ]; then
     # echo "Speaker: $s"
     local/compute_spk_pool_affinity.sh ${plda_dir} ${xvect_enrolls} ${xvect_trials} \
    "$s" "${expo}/affinity_${s}" $expo/log/ivector-spk-plda-scoring.log || exit 1;
+  done
+fi
+
+exit 0
+
+
+if [ $stage -le 3 ]; then
+  src_spk2gender=data/$enrolls/spk2gender
+
+  xvect_enrolls=$x_vector_ouput/xvect_$enrolls/xvector.scp
+  xvect_trials=$x_vector_ouput/xvect_$trials/xvector.scp
+
+  cut -d\  -f 1 ${src_spk2gender} | while read s; do
+    echo "Speaker: $s"
+    mkdir -p $expo/scores_no_mean_$s/data_trials/
+
+    cat data/$enrolls/enrolls | grep "^$s" | while read enroll_session; do
+      echo $enroll_session
+      cat data/$trials/trials | grep "^$s" |  sed "s/^$s/$enroll_session/" > $expo/scores_no_mean_$s/data_trials/trials_$enroll_session
+
+
+    [[ -s $expo/scores_no_mean_$s/data_trials/trials_$enroll_session ]] && echo "full" || continue
+
+    ivector-plda-scoring --normalize-length=true \
+      "ivector-copy-plda --smoothing=0.0 $plda_dir/plda - |" \
+      "ark:ivector-subtract-global-mean $plda_dir/mean.vec scp:${xvect_enrolls} ark:- | transform-vec $plda_dir/transform.mat ark:- ark:- | ivector-normalize-length ark:- ark:- |" \
+      "ark:ivector-subtract-global-mean $plda_dir/mean.vec scp:${xvect_trials} ark:- | transform-vec $plda_dir/transform.mat ark:- ark:- | ivector-normalize-length ark:- ark:- |" \
+      "cat $expo/scores_no_mean_$s/data_trials/trials_$enroll_session | cut -d' ' --fields=1,2 |" "$expo/scores_no_mean_$s/scores_$enroll_session" || exit 1;
+
+
+  temp_trial=$(mktemp)
+  temp_scores=$(mktemp)
+
+  cat $expo/scores_no_mean_$s/data_trials/trials_$enroll_session > $temp_trial
+  cat $expo/scores_no_mean_$s/scores_$enroll_session > $temp_scores
+
+  eer=`compute-eer <(local/prepare_for_eer.py $temp_trial $temp_scores) 2> /dev/null`
+  mindcf1=`sid/compute_min_dcf.py --p-target 0.01 $temp_scores $temp_trial 2> /dev/null`
+  mindcf2=`sid/compute_min_dcf.py --p-target 0.001 $temp_scores $temp_trial 2> /dev/null`
+  echo "EER: $eer%" | tee $expo/scores_no_mean_$s/EER_$enroll_session
+  echo "minDCF(p-target=0.01): $mindcf1" | tee -a $expo/scores_no_mean_$s/EER_$enroll_session
+  echo "minDCF(p-target=0.001): $mindcf2" | tee -a $expo/scores_no_mean_$s/EER_$enroll_session
+  PYTHONPATH=$(realpath ./tools/cllr) python3 ./tools/cllr/compute_cllr.py \
+    -k $temp_trial -s $temp_scores -e | tee $expo/scores_no_mean_$s/Cllr_$enroll_session || exit 1
+
+  # Compute linkability
+  PYTHONPATH=$(realpath ./tools/anonymization_metrics) python3 local/compute_linkability.py \
+    -k $temp_trial -s $temp_scores --bins 50 \
+    -d -o $expo/scores_no_mean_$s/linkability_log_$enroll_session | tee $expo/scores_no_mean_$s/linkability_log_$enroll_session || exit 1
+
+  rm $temp_trial
+  rm $temp_scores
+
+    done
+
   done
 fi

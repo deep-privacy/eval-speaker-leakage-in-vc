@@ -13,6 +13,8 @@ voice_conversion_exp=""
 
 . utils/parse_options.sh || exit 1;
 
+echo "$0 $@"
+
 src_data=$1
 target_spk=$2
 

@@ -16,28 +16,24 @@ data = {
 'group': [],
 }
 
+data['wer'] = []
 for file in os.listdir(f"results/{resultsFile}"):
-    if file.startswith("eval_spk_") and file.endswith("_retrain"):
+    if file.startswith("eval_spk_") and not file.endswith("_retrain"):
         print("====")
         print("pseudo spk")
         psuedo_spk = str(file).split("_")[2]
         print(psuedo_spk)
         data['group'].append(psuedo_spk)
 
-        for dataset in os.listdir(f"results/{resultsFile}"+ str(file)):
-            for proj in os.listdir(f"results/{resultsFile}"+ str(file) + "/" + str(dataset)):
-                if proj.startswith("linkability_log_"):
-                    f = open(f"results/{resultsFile}"+ str(file) + "/" + str(dataset) + "/" + proj, "r")
-                    content = f.readline()
-                    if content == "":
-                        print("Ommiting", f)
-                        continue
-                    speaker = str(proj).split("_")[2]
-                    mincllr = float(content.split(":")[1].split("/")[0])
-                    if speaker not in data:
-                        data[speaker] = []
-                    data[speaker].append(mincllr)
-                    f.close()
+
+        f = open(f"results/{resultsFile}"+ str(file) + "/" + "ASR-libri_test-" + psuedo_spk + "_asr_anon", "r")
+        content = f.readlines()[-1]
+        if content == "":
+            print("Ommiting", f)
+            continue
+        wer = float(content.split("[")[0].split("R")[1])
+        data['wer'].append(wer)
+        f.close()
 
 data_origial = {
 'group': [],
@@ -47,19 +43,22 @@ psuedo_spk = "Original Speech"
 data_origial['group'].append(psuedo_spk)
 
 for dataset in os.listdir("results/original_speech/"):
+    if not dataset.startswith("xvector_selected_"):
+        continue
     for proj in os.listdir("results/original_speech/"  + str(dataset)):
-        if proj.startswith("linkability_log_"):
+        if proj.startswith("ASR-"):
             f = open("results/original_speech/"  + str(dataset) + "/" + proj, "r")
             content = f.readlines()[-1]
             if content == "":
                 print("Ommiting", f)
                 continue
-            speaker = str(proj).split("_")[2]
-            mincllr = float(content.split(":")[1].split("/")[0])
-            if speaker not in data_origial:
-                data_origial[speaker] = []
-            data_origial[speaker].append(mincllr)
+            speaker = proj.split("_")[-1]
+            wer = float(content.split("[")[0].split("R")[1])
+            data_origial[speaker] = wer
             f.close()
+
+print("== Data on original_speech")
+print(data_origial)
 
 # ------- PART 1: Define a function that do a plot for one line of the dataset!
 
@@ -73,6 +72,7 @@ df = pd.DataFrame({
 'var5': [28, 15, 32, 14]
 })
 print(df)
+print(data)
 
 
 #  pp.pprint(data)
@@ -123,27 +123,31 @@ def make_spider( row, title, spk, color):
     ax.set_theta_offset(pi / 2)
     ax.set_theta_direction(-1)
 
+    wer_on_original = []
+
+    print(data_origial)
+    for a in categories:
+        wer_on_original.append(data_origial[a])
+
+
     # Ind1
     values=df.loc[row].drop('group').values.flatten().tolist()
     values += values[:1]
-    original_speech_angle = data_origial[str(spk)][0]
-    if original_speech_angle < 0.01:
-        original_speech_angle = 0.025
-    if original_speech_angle > 0.9:
-        original_speech_angle = 0.985
-    print(original_speech_angle)
+
     ax.plot(angles, values, color=color, linewidth=2, linestyle='solid')
     ax.fill(angles, values, color=color, alpha=0.4)
-    ax.plot(angles, [original_speech_angle for _ in values], color='black', linewidth=3, linestyle='dotted')
+
+    wer_on_original += wer_on_original[:1]
+    ax.plot(angles, wer_on_original, color='black', linewidth=3, linestyle='dotted')
 
     # Draw one axe per variable + add labels labels yet
     plt.xticks(angles[:-1], categories, color='grey', size=18)
 
     # Draw ylabels
     ax.set_rlabel_position(0)
-    yval = [0,0.3,0.6,0.93]
-    yval_label = ["0","0.3","0.6","1"]
-    ylim = 1
+    yval = [0,5,10,19]
+    yval_label = ["0","5","10","20"]
+    ylim = 21
 
     plt.yticks(yval, yval_label, color="grey", size=20)
     plt.ylim(0,ylim)
@@ -163,6 +167,6 @@ my_palette = plt.cm.get_cmap("Set2", len(df.index))
 
 # Loop to plot
 for row in range(0, len(df.index)):
-    make_spider( row=row, title='Speaker'+df['group'][row], spk=df['group'][row], color=my_palette(row))
+    make_spider( row=row, title='WER', spk=df['group'][row], color=my_palette(row))
 
-plt.savefig('exp/fig/radar/radar_link.svg')
+plt.savefig('exp/fig/radar/radar_wer.svg')

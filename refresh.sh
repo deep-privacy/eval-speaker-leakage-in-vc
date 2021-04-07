@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function yes_or_no {
-  # return 1; # safe mesure
+  return 1; # safe mesure
     while true; do
         read -p "$* [y/n]: " yn
         case $yn in
@@ -12,7 +12,14 @@ function yes_or_no {
 }
 
 
-for f in exp/oar-log/*out.log; do
+log_suffix=f0-run
+
+# for f in exp/oar-log/*err-verif-no-voice.log; do
+for f in exp/oar-log/*err-$log_suffix.log; do
+  echo $f
+# for f in exp/oar-log/*nof0-out.log; do
+# for f in exp/oar-log/*more.log; do
+# for f in exp/oar-log/*out.log; do
   id=$(echo "$f" | cut -d'-' -f2 | cut -d'/' -f2)
   pseudo_speaker_test=$(echo "$f" | cut -d'-' -f3 | cut -d'/' -f2)
   log=$(oarstat -j $id --json --full)

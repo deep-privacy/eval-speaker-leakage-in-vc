@@ -80,6 +80,7 @@ if [ $stage -le 4 ]; then
   for name in libri_test\_{enrolls,trials_f,trials_m}; do
     ./vc_toolkit_helper/$vc_toolkit/make_pseudospeaker.sh --voice-conversion-exp $voice_conversion_exp \
       --stage $sub_stage $name $pseudo_speaker_test
+
   done
 fi
 
@@ -168,7 +169,7 @@ if [ $stage -le 8 ]; then
   # for suff in dev test; do
   suff=test
     printf "${RED}**ASV: libri_${suff}_trials_f, enroll - anonymized, trial - anonymized**${NC}\n"
-    local/asv_eval.sh --plda_dir $plda_dir --asv_eval_model $asv_eval_model \
+    local/asv_eval.sh --inverse_vad false --plda_dir $plda_dir --asv_eval_model $asv_eval_model \
       --enrolls libri_${suff}_enrolls-${pseudo_speaker_test}_anon --trials libri_${suff}_trials_f-${pseudo_speaker_test}_anon \
       --x-vector-ouput exp/anon_xvector_white-box_$pseudo_speaker_test \
       --results ./results/${vc_toolkit}/$results \
@@ -176,11 +177,34 @@ if [ $stage -le 8 ]; then
 
 
     printf "${RED}**ASV: libri_${suff}_trials_m, enroll - anonymized, trial - anonymized**${NC}\n"
-    local/asv_eval.sh --plda_dir $plda_dir --asv_eval_model $asv_eval_model \
+    local/asv_eval.sh --inverse_vad false --plda_dir $plda_dir --asv_eval_model $asv_eval_model \
       --enrolls libri_${suff}_enrolls-${pseudo_speaker_test}_anon --trials libri_${suff}_trials_m-${pseudo_speaker_test}_anon \
       --x-vector-ouput exp/anon_xvector_white-box_$pseudo_speaker_test \
       --results ./results/${vc_toolkit}/$results \
       --stage $sub_stage
   # done
 
+fi
+
+# exit 0
+if [ $stage -le 9 ]; then
+
+  # ASV_eval config
+  asv_eval_model=exp/models/asv_eval/xvect_01709_1
+  plda_dir=${asv_eval_model}/xvect_train_clean_360
+
+  suff=test
+    printf "${RED}**ASV: libri_${suff}_trials_m, enroll -  trial  == Original **${NC}\n"
+    local/asv_eval.sh --inverse_vad false --plda_dir $plda_dir --asv_eval_model $asv_eval_model \
+      --enrolls libri_${suff}_enrolls --trials libri_${suff}_trials_m \
+      --x-vector-ouput exp/xvector_original \
+      --results ./results/original_speech \
+      --stage $sub_stage
+
+    printf "${RED}**ASV: libri_${suff}_trials_m, enroll -  trial  == Original **${NC}\n"
+    local/asv_eval.sh --inverse_vad false --plda_dir $plda_dir --asv_eval_model $asv_eval_model \
+      --enrolls libri_${suff}_enrolls --trials libri_${suff}_trials_f \
+      --x-vector-ouput exp/xvector_original \
+      --results ./results/original_speech \
+      --stage $sub_stage
 fi

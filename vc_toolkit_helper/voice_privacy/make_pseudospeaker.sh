@@ -12,7 +12,7 @@ pseudo_xvec_rand_level=spk  # spk (all utterances will have same xvector) or utt
 cross_gender="false"        # true, same gender xvectors will be selected; false, other gender xvectors
 distance="plda"             # cosine/plda
 proximity="farthest"        # nearest/farthest
-f0_transformation="true"   # apply f0 transformation
+f0_transformation="false"   # apply f0 transformation
 rand_seed=2020
 
 
@@ -126,7 +126,8 @@ fi
 
 if [ $stage -le 3 ]; then
   printf "\n  ${GREEN}Stage 3: Writing pseudo-speaker spk2gender.\n"
-  genderTarget=$(cat ./data/${dataset_of_target}/spk2gender | grep  "^$target_spk" | head -n 1 | awk ' { print $2 }')
+  target_spk_norm=$(echo $target_spk | sed 's/_.*//')
+  genderTarget=$(cat ./data/${dataset_of_target}/spk2gender | grep  "^$target_spk_norm" | head -n 1 | awk ' { print $2 }')
   mkdir -p ${anon_xvec_out_dir}/xvectors_${src_data}-$target_spk/pseudo_xvecs/
   cat ./data/${src_data}/spk2utt | awk  "{ print \$1  \" ${genderTarget}\" }" > ${anon_xvec_out_dir}/xvectors_${src_data}-$target_spk/pseudo_xvecs/spk2gender
 fi
