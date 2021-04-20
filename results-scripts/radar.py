@@ -10,6 +10,9 @@ import sys
 
 resultsFile= "voice_privacy/"
 
+f0=""
+#  f0="_nof0"
+
 #  resultsFile= "voice_privacy_asv_eval_retrained_ON_SIL/"
 
 data = {
@@ -17,7 +20,10 @@ data = {
 }
 
 for file in os.listdir(f"results/{resultsFile}"):
-    if file.startswith("eval_spk_") and file.endswith("_retrain"):
+    if file.startswith("eval_spk_") and file.endswith(f0 + "_retrain"):
+        if f0 == "":
+            if file.endswith("f0_retrain"):
+                continue
         print("====")
         print("pseudo spk")
         psuedo_spk = str(file).split("_")[2]
@@ -47,10 +53,13 @@ psuedo_spk = "Original Speech"
 data_origial['group'].append(psuedo_spk)
 
 for dataset in os.listdir("results/original_speech/"):
+    if not dataset.startswith("ASV-"):
+        continue
     for proj in os.listdir("results/original_speech/"  + str(dataset)):
         if proj.startswith("linkability_log_"):
             f = open("results/original_speech/"  + str(dataset) + "/" + proj, "r")
-            content = f.readlines()[-1]
+            print(f)
+            content = f.readline()
             if content == "":
                 print("Ommiting", f)
                 continue
@@ -165,4 +174,4 @@ my_palette = plt.cm.get_cmap("Set2", len(df.index))
 for row in range(0, len(df.index)):
     make_spider( row=row, title='Speaker'+df['group'][row], spk=df['group'][row], color=my_palette(row))
 
-plt.savefig('exp/fig/radar/radar_link.svg')
+plt.savefig(f'exp/fig/radar/radar{f0}_link.svg')

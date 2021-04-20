@@ -31,7 +31,7 @@ do
 
 
   (
-  # local/asr_eval.sh --dset libritts_train_other_500_xvector_selected_$pseudo_speaker_test --model $asr_eval_model --results ./results/original_speech/xvector_selected_$pseudo_speaker_test || exit 1
+  local/asr_eval.sh --dset libritts_train_other_500_xvector_selected_$pseudo_speaker_test --model $asr_eval_model --results ./results/original_speech/xvector_selected_$pseudo_speaker_test || exit 1
 
   scoringAnalysis.sh --dataDir ./data/libritts_train_other_500_xvector_selected_$pseudo_speaker_test \
       --decodeDir ./exp/models/asr_eval/decode_libritts_train_other_500_xvector_selected_${pseudo_speaker_test}_tgsmall \

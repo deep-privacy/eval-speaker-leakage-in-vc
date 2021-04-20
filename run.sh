@@ -6,6 +6,8 @@ set -e
 
 stage=4
 sub_stage=0
+sub_stage7=4
+sub_sub_stage7=0
 init_kaldi=false
 
 export path_to_kaldi="/srv/storage/talc@talc-data.nancy/multispeech/calcul/users/pchampion/lab/voice_privacy/Voice-Privacy-Challenge-2020/kaldi"
@@ -150,7 +152,7 @@ fi
 if [ $stage -le 7 ]; then
   printf "${GREEN}\nStage 6.b: RETRAIN...${NC}\n"
   sudo-g5k nvidia-smi -c 3
-  ./run-retrain-asv.sh --pseudo-speaker-test $pseudo_speaker_test --stage 4
+  ./run-retrain-asv.sh --pseudo-speaker-test $pseudo_speaker_test --stage $sub_stage7 --sub_stage $sub_sub_stage7
 fi
 
 if [ $stage -le 8 ]; then

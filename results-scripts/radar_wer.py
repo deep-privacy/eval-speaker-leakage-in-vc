@@ -10,6 +10,9 @@ import sys
 
 resultsFile= "voice_privacy/"
 
+f0=""
+f0="_nof0"
+
 #  resultsFile= "voice_privacy_asv_eval_retrained_ON_SIL/"
 
 data = {
