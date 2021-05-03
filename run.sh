@@ -210,3 +210,19 @@ if [ $stage -le 9 ]; then
       --results ./results/original_speech \
       --stage $sub_stage
 fi
+
+
+# GEt results
+# cd results/voice_privacy
+# tail *[0-9][0-9]_retrain/*_f-*/Cllr | grep "^Cllr" | vim
+# tail *[0-9][0-9]_retrain/*_m-*/Cllr | grep "^Cllr" | vim
+
+# tail *[0-9]_nof0_retrain/*_f-*/Cllr | grep "^Cllr" | vim
+# tail *[0-9]_nof0_retrain/*_m-*/Cllr | grep "^Cllr" | vim
+# tail *[0-9]_nof0_retrain/*_f-*/linkability_log | grep "^link" | vim
+# tail *[0-9]_nof0_retrain/*_m-*/linkability_log | grep "^link" | vim
+# tail *[0-9]_nof0_retrain/*_f-*/EER  | grep "^EER" | sed "s/\%//g" | vim
+# tail *[0-9]_nof0_retrain/*_m-*/EER  | grep "^EER" | sed "s/\%//g" | vim
+
+# python results-scripts/radar_wer.py
+# python results-scripts/radar.py

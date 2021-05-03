@@ -22,6 +22,10 @@ data = {
 data['wer'] = []
 for file in os.listdir(f"results/{resultsFile}"):
     if file.startswith("eval_spk_") and not file.endswith("_retrain"):
+        if file.endswith("nof0") and f0 == "":
+            continue
+        if not file.endswith("nof0") and f0 == "_nof0":
+            continue
         print("====")
         print("pseudo spk")
         psuedo_spk = str(file).split("_")[2]
@@ -29,7 +33,7 @@ for file in os.listdir(f"results/{resultsFile}"):
         data['group'].append(psuedo_spk)
 
 
-        f = open(f"results/{resultsFile}"+ str(file) + "/" + "ASR-libri_test-" + psuedo_spk + "_asr_anon", "r")
+        f = open(f"results/{resultsFile}"+ str(file) + "/" + "ASR-libri_test-" + psuedo_spk + f0 + "_asr_anon", "r")
         content = f.readlines()[-1]
         if content == "":
             print("Ommiting", f)
@@ -60,9 +64,6 @@ for dataset in os.listdir("results/original_speech/"):
             data_origial[speaker] = wer
             f.close()
 
-print("== Data on original_speech")
-print(data_origial)
-
 # ------- PART 1: Define a function that do a plot for one line of the dataset!
 
 # Set data
@@ -74,17 +75,14 @@ df = pd.DataFrame({
 'var4': [7, 31, 33, 14],
 'var5': [28, 15, 32, 14]
 })
-print(df)
-print(data)
 
 
-#  pp.pprint(data)
 df = pd.DataFrame(data)
-print(df.head())
 
-df = df.set_index("group").T
+df = df.set_index("group")
+df = df.sort_index()
+df = df.T
 
-print(df.head())
 
 data = {
 'group': [],
@@ -128,7 +126,6 @@ def make_spider( row, title, spk, color):
 
     wer_on_original = []
 
-    print(data_origial)
     for a in categories:
         wer_on_original.append(data_origial[a])
 
@@ -137,6 +134,7 @@ def make_spider( row, title, spk, color):
     values=df.loc[row].drop('group').values.flatten().tolist()
     values += values[:1]
 
+    print(values)
     ax.plot(angles, values, color=color, linewidth=2, linestyle='solid')
     ax.fill(angles, values, color=color, alpha=0.4)
 
@@ -172,4 +170,4 @@ my_palette = plt.cm.get_cmap("Set2", len(df.index))
 for row in range(0, len(df.index)):
     make_spider( row=row, title='WER', spk=df['group'][row], color=my_palette(row))
 
-plt.savefig('exp/fig/radar/radar_wer.svg')
+plt.savefig(f'exp/fig/radar/radar{f0}_wer.svg')
