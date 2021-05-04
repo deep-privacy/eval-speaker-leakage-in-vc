@@ -45,8 +45,9 @@ mkdir -p $voice_conversion_exp || exit 1;
 f_job=0 # failed job
 pids=() # initialize pids
 ngpu=1 # Sync all jobs
-nvidia-smi >/dev/null 2>&1 || error_code=$?; if [[ "${error_code}" -eq 0 ]]; then ngpu=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l); fi
+nvidia-smi >/dev/null 2>&1 || error_code=$?; if [[ "${error_code}" -eq 0 ]]; then real_ngpu=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l); fi
 ngpu=4 # Sync all jobs
+[ $ngpu -gt $real_ngpu ] && ngpu=$real_ngpu
 
 datadir=data/libri_train_clean_360
 echo "Spliting $datadir in $ngpu"

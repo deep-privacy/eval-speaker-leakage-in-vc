@@ -12,7 +12,7 @@ function yes_or_no {
 }
 
 
-log_suffix=f0-run-fix
+log_suffix=random_select_test_asr
 
 # for f in exp/oar-log/*err-verif-no-voice.log; do
 for f in exp/oar-log/*err-$log_suffix.log; do

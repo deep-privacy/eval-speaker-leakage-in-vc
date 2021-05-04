@@ -23,9 +23,9 @@ printf "${GREEN}\nStage 6.b: Performing intelligibility assessment using ASR dec
 
 TMPFILE=$(mktemp /tmp/example.XXXXXXXXXX) || exit 1
 
-for i in {1..40}
+for i in {1..100}
 do
-  pseudo_speaker_test=$(cat ./exp/xvector_selected/spk_list.scp | tail -n+"$i" | head -1 | cut -d" " -f1)
+  pseudo_speaker_test=$(cat ./exp/xvector_selected_rand_100/spk_list.scp | tail -n+"$i" | head -1 | cut -d" " -f1)
   echo $pseudo_speaker_test > $TMPFILE
   subset_data_dir.sh --spk-list $TMPFILE ./data/libritts_train_other_500 ./data/libritts_train_other_500_xvector_selected_$pseudo_speaker_test
 

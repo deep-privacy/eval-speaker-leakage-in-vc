@@ -93,7 +93,7 @@ fi
 # fi
 
 
-target_scp_xvector=$(realpath ".")/exp/xvector_selected/spk_list.scp
+target_scp_xvector=$(realpath ".")/exp/xvector_selected_rand_100/spk_list.scp
 dataset_of_target=libritts_train_other_500
 
 # PATCH ON VPC

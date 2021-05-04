@@ -71,7 +71,7 @@ if [ $stage -le 3 ]; then
   ./local/train_select_xvector.sh
 fi
 
-pseudo_speaker_test=$(cat ./exp/xvector_selected/spk_list.scp | tail -n+"$pseudo_speaker_test_index" | head -1 | cut -d" " -f1)
+pseudo_speaker_test=$(cat ./exp/xvector_selected_rand_100/spk_list.scp | tail -n+"$pseudo_speaker_test_index" | head -1 | cut -d" " -f1)
 
 if [ $stage -le 4 ]; then
   printf "${GREEN}\nStage 4: Selecting pseudospeaker to anonymize the speech data.${NC}\n"
@@ -91,11 +91,12 @@ if [ $stage -le 5 ]; then
 
   f_job=0 # failed job
   pids=() # initialize pids
-  nvidia-smi >/dev/null 2>&1 || error_code=$?; if [[ "${error_code}" -eq 0 ]]; then ngpu=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l); fi
+  nvidia-smi >/dev/null 2>&1 || error_code=$?; if [[ "${error_code}" -eq 0 ]]; then real_ngpu=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l); fi
   ngpu=3 # Sync all jobs
+  [ $ngpu -gt $real_ngpu ] && ngpu=$real_ngpu
 
   suff=test
-  for name in libri_$suff\_{enrolls,trials_f,trials_m}; do
+  for name in libri_$suff\_{trials_f,trials_m}; do
 
     i_GPU=${#pids[@]}
     (
@@ -126,28 +127,27 @@ if [ $stage -le 6 ]; then
   results="eval_spk_$pseudo_speaker_test"
 
   # for suff in dev test; do
-  suff=test
-    printf "${RED}**ASV: libri_${suff}_trials_f, enroll - anonymized, trial - anonymized**${NC}\n"
-    local/asv_eval.sh --plda_dir $plda_dir --asv_eval_model $asv_eval_model \
-      --enrolls libri_${suff}_enrolls-${pseudo_speaker_test}_anon --trials libri_${suff}_trials_f-${pseudo_speaker_test}_anon \
-      --x-vector-ouput exp/anon_xvector_$pseudo_speaker_test \
-      --results ./results/${vc_toolkit}/$results \
-      --stage $sub_stage
+  # suff=test
+    # printf "${RED}**ASV: libri_${suff}_trials_f, enroll - anonymized, trial - anonymized**${NC}\n"
+    # local/asv_eval.sh --plda_dir $plda_dir --asv_eval_model $asv_eval_model \
+      # --enrolls libri_${suff}_enrolls-${pseudo_speaker_test}_anon --trials libri_${suff}_trials_f-${pseudo_speaker_test}_anon \
+      # --x-vector-ouput exp/anon_xvector_$pseudo_speaker_test \
+      # --results ./results/${vc_toolkit}/$results \
+      # --stage $sub_stage
 
 
-    printf "${RED}**ASV: libri_${suff}_trials_m, enroll - anonymized, trial - anonymized**${NC}\n"
-    local/asv_eval.sh --plda_dir $plda_dir --asv_eval_model $asv_eval_model \
-      --enrolls libri_${suff}_enrolls-${pseudo_speaker_test}_anon --trials libri_${suff}_trials_m-${pseudo_speaker_test}_anon \
-      --x-vector-ouput exp/anon_xvector_$pseudo_speaker_test \
-      --results ./results/${vc_toolkit}/$results \
-      --stage $sub_stage
+    # printf "${RED}**ASV: libri_${suff}_trials_m, enroll - anonymized, trial - anonymized**${NC}\n"
+    # local/asv_eval.sh --plda_dir $plda_dir --asv_eval_model $asv_eval_model \
+      # --enrolls libri_${suff}_enrolls-${pseudo_speaker_test}_anon --trials libri_${suff}_trials_m-${pseudo_speaker_test}_anon \
+      # --x-vector-ouput exp/anon_xvector_$pseudo_speaker_test \
+      # --results ./results/${vc_toolkit}/$results \
+      # --stage $sub_stage
   # done
 
   printf "${GREEN}\nStage 6.b: Performing intelligibility assessment using ASR decoding on $suff...${NC}\n"
   utils/combine_data.sh data/libri_${suff}-${pseudo_speaker_test}_asr_anon data/libri_${suff}_{trials_f,trials_m}-${pseudo_speaker_test}_anon || exit 1
   local/asr_eval.sh --dset libri_${suff}-${pseudo_speaker_test}_asr_anon --model $asr_eval_model --results ./results/${vc_toolkit}/$results || exit 1;
 fi
-
 
 if [ $stage -le 7 ]; then
   printf "${GREEN}\nStage 6.b: RETRAIN...${NC}\n"
