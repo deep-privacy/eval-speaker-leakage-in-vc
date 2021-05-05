@@ -127,7 +127,7 @@ if [ $stage -le 6 ]; then
   results="eval_spk_$pseudo_speaker_test"
 
   # for suff in dev test; do
-  # suff=test
+  suff=test
     # printf "${RED}**ASV: libri_${suff}_trials_f, enroll - anonymized, trial - anonymized**${NC}\n"
     # local/asv_eval.sh --plda_dir $plda_dir --asv_eval_model $asv_eval_model \
       # --enrolls libri_${suff}_enrolls-${pseudo_speaker_test}_anon --trials libri_${suff}_trials_f-${pseudo_speaker_test}_anon \
@@ -146,8 +146,11 @@ if [ $stage -le 6 ]; then
 
   printf "${GREEN}\nStage 6.b: Performing intelligibility assessment using ASR decoding on $suff...${NC}\n"
   utils/combine_data.sh data/libri_${suff}-${pseudo_speaker_test}_asr_anon data/libri_${suff}_{trials_f,trials_m}-${pseudo_speaker_test}_anon || exit 1
+  rm ./data/libri_${suff}-${pseudo_speaker_test}_asr_anon/spk2gender
   local/asr_eval.sh --dset libri_${suff}-${pseudo_speaker_test}_asr_anon --model $asr_eval_model --results ./results/${vc_toolkit}/$results || exit 1;
 fi
+
+exit 0
 
 if [ $stage -le 7 ]; then
   printf "${GREEN}\nStage 6.b: RETRAIN...${NC}\n"
