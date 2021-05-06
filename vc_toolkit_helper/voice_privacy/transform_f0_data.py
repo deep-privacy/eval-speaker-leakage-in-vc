@@ -44,6 +44,7 @@ with ReadHelper('scp:'+pitch_file) as reader:
             source_stats = json.load(f)
 
         selected_target_speaker_list = [target_spk]
+        #  print("selected f0 target_speaker_stats:", target_spk)
         
         pseudo_speaker_f0_stats = {"mu_s":0, "var_s":0, "std_s":0}
         for selected_target_speaker in selected_target_speaker_list:
