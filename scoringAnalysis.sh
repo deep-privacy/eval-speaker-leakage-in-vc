@@ -4,6 +4,8 @@ dataDir=$1
 decodeDir=$2
 langDir=$3
 
+ # ./scoringAnalysis.sh --dataDir ./data/libri_test-rand_select_test_asr_82_asr_anon  --decodeDir ./exp/models/asr_eval/decode_libri_test-4009_nof0_asr_anon_tglarge --langDir ./exp/models/asr_eval/lang_test_tglarge
+
 
 scoring_opts=
 cmd=run.pl
@@ -11,7 +13,12 @@ word_ins_penalty=0.0,0.5,1.0
 min_lmwt=7
 max_lmwt=17
 
-. parse_options.sh || exit 1;
+export path_to_kaldi="/srv/storage/talc@talc-data.nancy/multispeech/calcul/users/pchampion/lab/voice_privacy/Voice-Privacy-Challenge-2020/kaldi"
+
+. utils/parse_options.sh || exit 1;
+
+. ./cmd.sh
+. ./path.sh
 
 ref_filtering_cmd="cat"
 [ -x local/wer_output_filter ] && ref_filtering_cmd="local/wer_output_filter"
