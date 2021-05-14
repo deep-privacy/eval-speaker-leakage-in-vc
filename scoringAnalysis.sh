@@ -5,7 +5,7 @@ decodeDir=$2
 langDir=$3
 
  # ./scoringAnalysis.sh --dataDir ./data/libri_test-rand_select_test_asr_82_asr_anon  --decodeDir ./exp/models/asr_eval/decode_libri_test-4009_nof0_asr_anon_tglarge --langDir ./exp/models/asr_eval/lang_test_tglarge
-
+ # cd ./exp/models/asr_eval/decode_libri_test-rand_select_test_asr_82_asr_anon_tglarge/scoringDetails
 
 scoring_opts=
 cmd=run.pl
