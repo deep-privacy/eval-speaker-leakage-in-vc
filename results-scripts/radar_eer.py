@@ -34,14 +34,14 @@ for file in os.listdir(f"results/{resultsFile}"):
 
         for dataset in os.listdir(f"results/{resultsFile}"+ str(file)):
             for proj in os.listdir(f"results/{resultsFile}"+ str(file) + "/" + str(dataset)):
-                if proj.startswith("linkability_log_"):
+                if proj.startswith("Cllr_"):
                     f = open(f"results/{resultsFile}"+ str(file) + "/" + str(dataset) + "/" + proj, "r")
-                    content = f.readline()
+                    content = f.readlines()[1]
                     if content == "":
                         print("Ommiting", f)
                         continue
-                    speaker = str(proj).split("_")[2]
-                    mincllr = float(content.split(":")[1].split("/")[0])
+                    speaker = str(proj).split("_")[1]
+                    mincllr = float(content.split(":")[1].split("%")[0])
                     if speaker not in data:
                         data[speaker] = []
                     data[speaker].append(mincllr)
@@ -58,19 +58,20 @@ for dataset in os.listdir("results/original_speech/"):
     if not dataset.startswith("ASV-"):
         continue
     for proj in os.listdir("results/original_speech/"  + str(dataset)):
-        if proj.startswith("linkability_log_"):
+        if proj.startswith("Cllr_"):
             f = open("results/original_speech/"  + str(dataset) + "/" + proj, "r")
-            print(f)
-            content = f.readline()
+            content = f.readlines()[1]
             if content == "":
                 print("Ommiting", f)
                 continue
-            speaker = str(proj).split("_")[2]
-            mincllr = float(content.split(":")[1].split("/")[0])
+            speaker = str(proj).split("_")[1]
+            mincllr = float(content.split(":")[1].split("%")[0])
             if speaker not in data_origial:
                 data_origial[speaker] = []
             data_origial[speaker].append(mincllr)
             f.close()
+
+print(data_origial)
 
 # ------- PART 1: Define a function that do a plot for one line of the dataset!
 

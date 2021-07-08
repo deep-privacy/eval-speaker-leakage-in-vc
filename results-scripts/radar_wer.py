@@ -11,7 +11,7 @@ import sys
 resultsFile= "voice_privacy/"
 
 f0=""
-f0="_nof0"
+#  f0="_nof0"
 
 #  resultsFile= "voice_privacy_asv_eval_retrained_ON_SIL/"
 
@@ -22,6 +22,8 @@ data = {
 data['wer'] = []
 for file in os.listdir(f"results/{resultsFile}"):
     if file.startswith("eval_spk_") and not file.endswith("_retrain"):
+        if file.startswith("eval_spk_rand_select_test"):
+            continue
         if file.endswith("nof0") and f0 == "":
             continue
         if not file.endswith("nof0") and f0 == "_nof0":
@@ -135,6 +137,7 @@ def make_spider( row, title, spk, color):
     values += values[:1]
 
     print(values)
+    print(categories)
     ax.plot(angles, values, color=color, linewidth=2, linestyle='solid')
     ax.fill(angles, values, color=color, alpha=0.4)
 
